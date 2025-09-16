@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.author.chen.mapper.ClazzMapper">
+    <select id="queryByParam" resultType="com.author.chen.pojo.Clazz">
+      select  e.name as masterName,c.id,c.name, c.room, c.begin_date as beginDate, c.end_date as endDate,
+        c.master_id masterId, c.subject, c.create_time createTime,c.update_time as updateTime,
+        ( case when  now() &gt; end_date then '已结课'
+            when now() &lt; begin_date then '未开课'
+            else '在班' end) as status
+      from clazz c left join emp e on e.id=c.master_id
+        <where>
+            <if test=" name != null and name!='' ">
+                c.name like concat('%' #{name} '%')
+            </if>
+            <if test="begin!=null and end!=null">
+                and c.end_date between #{begin} and #{end}
+            </if>
+        </where>
+    </select>
+    <select id="info" resultType="com.author.chen.pojo.Clazz"><![CDATA[
+       select e.name as masterName ,c.id, c.name, c.room, c.begin_date beginDate,
+              c.end_date endDate, c.master_id masterId,  c.subject, c.create_time createTime,
+              c.update_time updateTime,(case  when now()<begin_date then '未开课'
+                                               when now()>end_date then '已结课'
+                                               else  '在班' end ) as status
+                from clazz c left join emp e on e.id=c.master_id   where c.id=#{id}
+    ]]></select>
+</mapper>
