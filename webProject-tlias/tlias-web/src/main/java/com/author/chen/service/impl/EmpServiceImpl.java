@@ -5,16 +5,18 @@ import com.author.chen.mapper.EmpMapper;
 import com.author.chen.pojo.*;
 import com.author.chen.service.EmpLogService;
 import com.author.chen.service.EmpService;
+import com.author.chen.utils.JwtUtils;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 
 @Service
@@ -119,11 +121,35 @@ public class EmpServiceImpl implements EmpService {
         //获取 员工经历
         List<EmpExpr> exprList = emp.getExprList();
 
-       if(! CollectionUtils.isEmpty(exprList)){
-           exprList.forEach(s->{
-               s.setEmpId(emp.getId());
-           });
-           empExprMapper.insertBatch(exprList);
-       }
+        if (!CollectionUtils.isEmpty(exprList)) {
+            exprList.forEach(s -> {
+                s.setEmpId(emp.getId());
+            });
+            empExprMapper.insertBatch(exprList);
+        }
+    }
+
+    @Override
+    public LoginInfo LoginRequest(Emp emp) {
+
+        Emp empResult = empMapper.loginRequest(emp);
+
+        if(empResult!=null){
+
+            Map<String,Object> dataMap=new HashMap<>();//添加自定义内容体
+            dataMap.put("id",empResult.getId());
+            dataMap.put("username",empResult.getUsername());
+//            String token = Jwts.builder() //构建 jwt
+//                    .signWith(SignatureAlgorithm.HS256, "Y2hlbg==")//自定义编码格式 密钥
+//                    .addClaims(dataMap)//将内容体添加到载荷
+//                    .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))//过期时间 设置为初次登录的一天后
+//                    .compact();//完成一条令牌的封装
+
+            String token = JwtUtils.generateJwt(dataMap);
+
+            return new LoginInfo(empResult.getId(), emp.getUsername(), emp.getPassword(), token);//返回
+        }
+
+        return null;
     }
 }
